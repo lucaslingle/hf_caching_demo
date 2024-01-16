@@ -15,11 +15,10 @@ def main():
     parser.add_argument("--hfds_identifier", type=str, help="HF datasets identifier")
     parser.add_argument("--hfds_split_name", type=str, help="HF datasets split name")
     parser.add_argument("--gc_project", type=str, help="Google Cloud project")
-    parser.add_argument("--gc_secret_key", type=str, help="Google Cloud api key")
     parser.add_argument("--gc_storage_uri", type=str, help="Google Cloud storage path")
     args = parser.parse_args()
-    storage_options = dict(project=args.gc_project)  #, key=args.gc_secret_key)
-    fs = gcsfs.GCSFileSystem(**storage_options)  #, token=None)
+    storage_options = dict(project=args.gc_project)
+    fs = gcsfs.GCSFileSystem(**storage_options)
     ds_all_splits = datasets.load_dataset(
         args.hfds_identifier,
         cache_dir=posixpath.join(args.gc_storage_uri, "staging"),
