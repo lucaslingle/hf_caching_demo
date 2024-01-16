@@ -8,8 +8,6 @@ SEQLEN = 512
 TEXTCOL = "text"
 
 
-# to make an api key, follow instructions at
-# https://developers.google.com/workspace/guides/create-credentials
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hfds_identifier", type=str, help="HF datasets identifier")
