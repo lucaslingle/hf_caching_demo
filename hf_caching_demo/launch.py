@@ -9,7 +9,7 @@ import gcsfs
 import datasets as hfds
 import posixpath
 import transformers as hftr
-import jax
+# import jax
 import numpy as np
 
 BATCH_SIZE = 8
@@ -55,8 +55,8 @@ def get_dataset(
     sequence_len: int,
 ) -> hfds.Dataset:
     # get shard info
-    pcount = jax.process_count()
-    pindex = jax.process_index()
+    # pcount = jax.process_count()
+    # pindex = jax.process_index()
 
     # get tokenizer info
     assert hftr_tokenizer.is_fast
