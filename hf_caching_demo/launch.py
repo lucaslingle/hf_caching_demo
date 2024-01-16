@@ -15,14 +15,14 @@ def main():
     args = parser.parse_args()
     storage_options = dict(
         project=args.gc_project,
-        token=args.gc_secret_key,
+        key=args.gc_secret_key,
     )
     fs = gcsfs.GCSFileSystem(**storage_options)  # todo: do we need this line?
+    output_dir = (epath.Path(args.gc_storage_uri) / "staging").as_uri()
     builder = datasets.load_dataset_builder(args.hfds_identifier)
     builder.download_and_prepare(
-        (epath.Path(args.gc_storage_uri) / "staging").as_uri(),
-        storage_options=storage_options,
-        file_format="parquet",
+        output_dir=output_dir,
+        **storage_options,
     )
 
     # #
