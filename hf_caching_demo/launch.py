@@ -45,4 +45,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    ds = main()
+    ds = ds.iter(batch_size=8)
+    batch = next(ds)
+    print(batch)
