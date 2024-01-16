@@ -149,7 +149,9 @@ def main():
     ds = ds[STEP * BATCH_SIZE:]
 
     # convert to iterator, batch examples to the desired batch size per host.
+    print(f"calling Dataset.iter to make iterator of batches...")
     ds_iter = ds.iter(batch_size=BATCH_SIZE, drop_last_batch=True)
+    print(f"calling map(ds_iter) to get numpy arrays...")
     ds_iter = map(
         lambda r: {
             "inputs": np.array(r["inputs"], dtype=np.int32),
