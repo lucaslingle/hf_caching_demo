@@ -32,7 +32,7 @@ def main():
         )["input_ids"]
 
     for s in ds_all_splits.keys():
-        path_s = posixpath.join(args.gc_storage_uri, s),
+        path_s = posixpath.join(args.gc_storage_uri, s)
         if not fs.exists(path_s):
             ds = ds_all_splits.get(s)
             ds = ds.map(tokenize_fast, batch_size=1024)
