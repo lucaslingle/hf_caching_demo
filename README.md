@@ -7,7 +7,7 @@ Install Pipx and Poetry. Then run
 ```
 git clone https://github.com/lucaslingle/hf_caching_demo.git;
 cd hf_caching_demo;
-poetry install;
+poetry install --with tpu --without cpu;  # or other way around
 ```
 
 ### Usage
