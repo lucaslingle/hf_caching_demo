@@ -112,17 +112,6 @@ def get_dataset(
         batched=True,
         batch_size=hfds_buffer_size,
     )
-
-    # automatically split the training split if there aren't canonical splits
-    if hfds_splits_set != set(SPLITS):
-        if split_name == "validation":
-            ds = ds.take(batch_size * 100)
-        elif split_name == "test":
-            ds = ds.take(batch_size * 200).skip(batch_size * 100)
-        elif split_name == "train":
-            ds = ds.skip(batch_size * 200)
-        else:
-            raise NotImplementedError("Unrecognized split name")
     return ds
 
 
