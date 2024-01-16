@@ -7,11 +7,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.10.dev0"
-gcsfs = "<2023.10.0"
-fsspec = "<2023.10.0"
+gcsfs = "2023.10.0"
+fsspec = "2023.10.0"
 datasets = "2.16.1"
 transformers = "4.36.2"
-etils = "1.5.0"
 importlib-resources = "^6.1.1"
 async-timeout = "^4.0.3"
 
