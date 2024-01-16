@@ -1,10 +1,7 @@
 # todo: shard by host, somehow
 
-from typing import Iterator
-from typing import Mapping
 from typing import Optional
 import argparse
-import itertools
 
 import gcsfs
 import datasets as hfds
@@ -148,7 +145,7 @@ def main():
     )
     print(f"calling Dataset.select to slice...")
     # https://discuss.huggingface.co/t/efficiently-slicing-dataset/28067
-    ds = ds.select(itertools.count(start=STEP * BATCH_SIZE))
+    ds = ds.select(range(STEP * BATCH_SIZE, len(ds)))
 
     # convert to iterator, batch examples to the desired batch size per host.
     print(f"calling Dataset.iter to make iterator of batches...")
