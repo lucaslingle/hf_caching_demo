@@ -47,11 +47,9 @@ def get_dataset(
     hfds_identifier: str,
     hfds_config: Optional[str],
     hfds_datacol: str,
-    hfds_stream_data: bool,
     hfds_buffer_size: int,
     hftr_tokenizer: hftr.PreTrainedTokenizerFast,
     split_name: str,
-    batch_size: int,
     sequence_len: int,
 ) -> hfds.Dataset:
     # get shard info
@@ -133,11 +131,9 @@ def main():
                 hfds_identifier=args.hfds_identifier,
                 hfds_config=None,
                 hfds_datacol=TEXTCOL,
-                hfds_stream_data=False,
                 hfds_buffer_size=1024,
                 hftr_tokenizer=get_tokenizer("GPT2TokenizerFast", "gpt2"),
                 split_name=s,
-                batch_size=BATCH_SIZE,
                 sequence_len=SEQLEN,
             )
             ds.save_to_disk(path_s, storage_options=storage_options)
