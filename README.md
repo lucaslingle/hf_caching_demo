@@ -7,9 +7,8 @@ Install Pipx and Poetry. Then run
 ```
 git clone https://github.com/lucaslingle/hf_caching_demo.git;
 cd hf_caching_demo;
-poetry install --with GROUP;
+poetry install;
 ```
-where the dependency group ```GROUP``` is ```tpu``` for TPU VMs, and ```cpu``` otherwise. 
 
 ### Usage
 
