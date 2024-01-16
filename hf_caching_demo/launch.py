@@ -12,6 +12,7 @@ import transformers as hftr
 # import jax
 import numpy as np
 
+STEP = 0
 BATCH_SIZE = 8
 SEQLEN = 512
 TEXTCOL = "text"
@@ -80,7 +81,6 @@ def get_dataset(
         split=split_name,
         streaming=False,
     )
-
     # shard by host, then tokenize the host's shard only
     assert "content_" not in set(ds.column_names)
 
@@ -138,10 +138,20 @@ def main():
             )
             ds.save_to_disk(path_s, storage_options=storage_options)
 
-    ds = hfds.load_from_disk(
-        dataset_path=posixpath.join(args.gc_storage_uri, args.hfds_split_name),
-        storage_options=storage_options,
+    # ds = hfds.load_from_disk(
+    #     dataset_path=posixpath.join(args.gc_storage_uri, args.hfds_split_name)
+    #     storage_options=storage_options,
+    # )
+    # ds = hfds.ReadInstruction(
+    #     split_name, from_=step * batch_size, to=-1, unit="abs"
+    # )
+    ds = hfds.load_dataset(
+        path=posixpath.join(args.gc_storage_uri),
+        split_name=hfds.ReadInstruction(
+            args.hfds_split_name, from_=STEP * BATCH_SIZE, to=-1, unit="abs"
+        ),
     )
+
     # convert to iterator, batch examples to the desired batch size per host.
     ds_iter = ds.iter(batch_size=BATCH_SIZE, drop_last_batch=True)
     ds_iter = map(
