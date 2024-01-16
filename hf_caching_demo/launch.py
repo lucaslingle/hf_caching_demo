@@ -20,7 +20,10 @@ def main():
     storage_options = dict(project=args.gc_project)
     fs = gcsfs.GCSFileSystem(**storage_options)
     ds_all_splits = datasets.load_dataset(args.hfds_identifier)
-    tokenizer_ = transformers.GPT2TokenizerFast.from_pretrained("gpt2")
+    tokenizer_ = transformers.GPT2TokenizerFast.from_pretrained(
+        pretrained_model_name_or_path="gpt2",
+        pad_token=transformers.GPT2TokenizerFast.from_pretrained("gpt2").eos_token,
+    )
 
     def tokenize_fast(examples):
         return tokenizer_(
