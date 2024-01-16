@@ -128,6 +128,7 @@ def main():
     for s in SPLITS:
         path_s = posixpath.join(args.gc_storage_uri, s)
         if not fs.exists(path_s):
+            print(f"calling get_dataset for split {s}...")
             ds = get_dataset(
                 hfds_identifier=args.hfds_identifier,
                 hfds_config=None,
@@ -139,10 +140,12 @@ def main():
             )
             ds.save_to_disk(path_s, storage_options=storage_options)
 
+    print(f"calling hfds.load_from_disk for split {args.hfds_split_name}...")
     ds = hfds.load_from_disk(
         dataset_path=posixpath.join(args.gc_storage_uri, args.hfds_split_name),
         storage_options=storage_options,
     )
+    print(f"calling Dataset.__getitem__ to slice...")
     ds = ds[STEP * BATCH_SIZE:]
 
     # convert to iterator, batch examples to the desired batch size per host.
