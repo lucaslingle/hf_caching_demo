@@ -18,12 +18,12 @@ def main():
     parser.add_argument("--gc_secret_key", type=str, help="Google Cloud api key")
     parser.add_argument("--gc_storage_uri", type=str, help="Google Cloud storage path")
     args = parser.parse_args()
-    fs = gcsfs.GCSFileSystem(project=args.gc_project, token=None)
-    hfds_storage_options = dict(project=args.gc_project, key=args.gc_secret_key)
+    fs = gcsfs.GCSFileSystem(project=args.gc_project, token=args.gc_secret_key)
+    storage_options = dict(project=args.gc_project, key=args.gc_secret_key)
     ds_all_splits = datasets.load_dataset(
         args.hfds_identifier,
-        cache_dir=posixpath.join(args.gc_storage_uri, "cache_"),
-        storage_options=hfds_storage_options,
+        cache_dir=posixpath.join(args.gc_storage_uri, "staging"),
+        storage_options=storage_options,
     )
     tokenizer_ = transformers.GPT2TokenizerFast.from_pretrained("gpt2")
 
@@ -40,11 +40,11 @@ def main():
         if not fs.exists(path_s):
             ds = ds_all_splits.get(s)
             ds = ds.map(tokenize_fast, batch_size=1024)
-            ds.save_to_disk(path_s, storage_options=hfds_storage_options)
+            ds.save_to_disk(path_s, storage_options=storage_options)
 
     return datasets.load_from_disk(
         dataset_path=posixpath.join(args.gc_storage_uri, args.hfds_split_name),
-        storage_options=hfds_storage_options,
+        storage_options=storage_options,
     )
 
 
