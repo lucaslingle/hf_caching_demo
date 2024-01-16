@@ -31,7 +31,7 @@ def main():
             padding="max_length",
             truncation=True,
             max_length=SEQLEN,
-        )["input_ids"]
+        )
 
     for s in ds_all_splits.keys():
         path_s = posixpath.join(args.gc_storage_uri, s)
