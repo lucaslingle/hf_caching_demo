@@ -17,8 +17,8 @@ To run the script, do something like this
 ```
 poetry run python3 hf_caching_demo/launch.py \
     --hfds_identifier=Skylion007/openwebtext \
+    --hfds_split_name=train \
     --gc_project=someproject \
-    --gc_secret_key=SOMETHING \
     --gc_storage_uri=gs://somewhere/
 ```
 
