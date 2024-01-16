@@ -18,7 +18,7 @@ def main():
     parser.add_argument("--gc_secret_key", type=str, help="Google Cloud api key")
     parser.add_argument("--gc_storage_uri", type=str, help="Google Cloud storage path")
     args = parser.parse_args()
-    fs = gcsfs.GCSFileSystem(project=args.gc_project, token=args.gc_secret_key)
+    fs = gcsfs.GCSFileSystem(project=args.gc_project, token=None)
     storage_options = dict(project=args.gc_project, key=args.gc_secret_key)
     ds_all_splits = datasets.load_dataset(
         args.hfds_identifier,
