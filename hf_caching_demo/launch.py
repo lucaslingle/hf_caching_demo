@@ -4,17 +4,15 @@ import datasets
 from etils import epath
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("hfds_identifier", type=str, help="HF datasets identifier")
-parser.add_argument("gc_project", type=str, help="Google Cloud project")
-parser.add_argument("gc_secret_key", type=str, help="Google Cloud project api key")
-parser.add_argument("gc_storage_uri", type=str, help="Google Cloud Storage path")
-args = parser.parse_args()
-
-
 # to make an api key, follow instructions at
 # https://developers.google.com/workspace/guides/create-credentials
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hfds_identifier", type=str, help="HF datasets identifier")
+    parser.add_argument("--gc_project", type=str, help="Google Cloud project")
+    parser.add_argument("--gc_secret_key", type=str, help="Google Cloud api key")
+    parser.add_argument("--gc_storage_uri", type=str, help="Google Cloud storage path")
+    args = parser.parse_args()
     storage_options = dict(
         project=args.gc_project,
         token=args.gc_secret_key,
