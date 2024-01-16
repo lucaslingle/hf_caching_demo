@@ -21,3 +21,13 @@ poetry run python3 hf_caching_demo/launch.py \
     --gc_secret_key=SOMETHING \
     --gc_storage_uri=gs://somewhere/
 ```
+
+
+### Todo
+
+- How fast to resume midway through a large dataset?
+- How much VM disk space do we need to write large datasets to GCS?
+- How much VM disk space do we need to read large datasets from GCS?
+- How to shard reasonably before writing to GCS? Perhaps just make num files a multiple of 8 (since there are eight cores per TPU VM)?
+- How to load with minimal network IO, minimal host-to-device IO? 
+- How much does any of this matter with async dispatch? 
