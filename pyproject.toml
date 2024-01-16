@@ -14,7 +14,15 @@ datasets = "2.16.1"
 transformers = "4.36.2"
 importlib-resources = "^6.1.1"
 async-timeout = "^4.0.3"
-jax = {"extras" = ["cpu"], "version" = "0.4.23"}
+
+[tool.poetry.group.cpu.dependencies]
+jax = {extras = ["cpu"], version = "0.4.23"}
+jaxlib = {extras = ["cpu"], version = "0.4.23"}
+
+[tool.poetry.group.tpu.dependencies]
+libtpu-nightly = { url = "https://storage.googleapis.com/cloud-tpu-tpuvm-artifacts/wheels/libtpu-nightly/libtpu_nightly-0.1.dev20231213-py3-none-any.whl" }
+jax = {extras = ["tpu"], version = "0.4.23"}
+jaxlib = {extras = ["tpu"], version = "0.4.23"}
 
 [build-system]
 requires = ["poetry-core"]
