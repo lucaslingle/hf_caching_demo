@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "hf-caching-demo"
+version = "0.1.0"
+description = ""
+authors = ["lucaslingle <lucasdaxlingle@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+gcsfs = "2023.10.0"
+datasets = "2.16.1"
+transformers = "4.36.2"
+etils = "1.5.0"
+importlib-resources = "^6.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
