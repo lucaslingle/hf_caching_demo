@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     storage_options = dict(project=args.gc_project, key=args.gc_secret_key)
     fs = gcsfs.GCSFileSystem(**storage_options)  # todo: do we need this line?
-    ds_all_splits = datasets.load_dataset(args.hfds_identifier, streaming=True)
+    ds_all_splits = datasets.load_dataset(args.hfds_identifier)
     tokenizer_ = transformers.GPT2TokenizerFast.from_pretrained("gpt2")
 
     def tokenize_fast(examples):
