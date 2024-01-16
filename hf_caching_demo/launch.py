@@ -22,7 +22,7 @@ def main():
     builder = datasets.load_dataset_builder(args.hfds_identifier)
     builder.download_and_prepare(
         output_dir=output_dir,
-        **storage_options,
+        storage_options=storage_options,
     )
 
     # #
