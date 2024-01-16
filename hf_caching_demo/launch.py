@@ -106,7 +106,7 @@ def get_dataset(
     ds = ds.map(
         shard_by_host,
         batched=True,
-        batch_size=hfds_buffer_size * jax.process_count(),
+        batch_size=hfds_buffer_size,  # * jax.process_count(),
         remove_columns=list(ds.column_names),
     )
     ds = ds.map(
