@@ -19,11 +19,7 @@ def main():
     args = parser.parse_args()
     storage_options = dict(project=args.gc_project)
     fs = gcsfs.GCSFileSystem(**storage_options)
-    ds_all_splits = datasets.load_dataset(
-        args.hfds_identifier,
-        cache_dir=posixpath.join(args.gc_storage_uri, "staging"),
-        storage_options=storage_options,
-    )
+    ds_all_splits = datasets.load_dataset(args.hfds_identifier)
     tokenizer_ = transformers.GPT2TokenizerFast.from_pretrained("gpt2")
 
     def tokenize_fast(examples):
