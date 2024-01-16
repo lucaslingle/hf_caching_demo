@@ -61,14 +61,25 @@ def get_dataset(
     # get tokenizer info
     assert hftr_tokenizer.is_fast
     bos_id = hftr_tokenizer.bos_token_id
-    assert split_name in SPLITS
 
     # load dataset
     hfds_splits_set = set(hfds.get_dataset_split_names(hfds_identifier))
+    if hfds_splits_set != set(SPLITS):
+        if split_name == "train":
+            split_name = "train[0%:90%]"
+        elif split_name == "validation":
+            split_name = "train[90%:95%]"
+        elif split_name == "test":
+            split_name = "train[95%:100%]"
+        else:
+            raise NotImplementedError
+    else:
+        assert split_name in hfds_splits_set
+
     ds = hfds.load_dataset(
         hfds_identifier,
         hfds_config,
-        split="train" if hfds_splits_set != set(SPLITS) else split_name,
+        split=split_name,
         streaming=False,
     )
 
