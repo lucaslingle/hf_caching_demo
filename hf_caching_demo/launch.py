@@ -61,6 +61,7 @@ def get_dataset(
     # get tokenizer info
     assert hftr_tokenizer.is_fast
     bos_id = hftr_tokenizer.bos_token_id
+    assert split_name in SPLITS
 
     # load dataset
     hfds_splits_set = set(hfds.get_dataset_split_names(hfds_identifier))
