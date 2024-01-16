@@ -18,18 +18,23 @@ def main():
         key=args.gc_secret_key,
     )
     fs = gcsfs.GCSFileSystem(**storage_options)  # todo: do we need this line?
+
+    # maybe cache the built dataset
     output_dir = (epath.Path(args.gc_storage_uri) / "staging").as_uri()
     builder = datasets.load_dataset_builder(args.hfds_identifier)
     builder.download_and_prepare(
         output_dir=output_dir,
         storage_options=storage_options,
     )
-
-    # #
+    # and maybe process further
+    # todo: this
+    # and maybe save the processed dataset
     # encoded_dataset.save_to_disk(
     #     "gcs://my-private-datasets/imdb/train",
     #     storage_options=storage_options,
     # )
+
+    # load the processed dataset
 
 
 if __name__ == "__main__":
