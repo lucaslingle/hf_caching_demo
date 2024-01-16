@@ -15,7 +15,7 @@ import numpy as np
 BATCH_SIZE = 8
 SEQLEN = 512
 TEXTCOL = "text"
-SPLITS = ["train", "val", "test"]
+SPLITS = ["train", "validation", "test"]
 
 
 def get_tokenizer(
@@ -60,29 +60,15 @@ def get_dataset(
 
     # get tokenizer info
     assert hftr_tokenizer.is_fast
-    eos_id = hftr_tokenizer.eos_token_id
     bos_id = hftr_tokenizer.bos_token_id
 
-    # get available splits, and pick one.
+    # load dataset
     hfds_splits_set = set(hfds.get_dataset_split_names(hfds_identifier))
-    if len(hfds_splits_set) == 1:
-        # if only one split is available, we'll do this split ourselves later.
-        hfds_split = set(y for y in hfds_splits_set).pop()
-    elif split_name in hfds_splits_set:
-        # use user-provided split name if possible
-        hfds_split = split_name
-    elif any(y.startswith(split_name) for y in hfds_splits_set):
-        # use split that starts with the user-provided one
-        hfds_split = set(y for y in hfds_splits_set if y.startswith(split_name)).pop()
-    else:
-        raise ValueError("Unrecognized split name.")
-
-    # load dataset lazily
     ds = hfds.load_dataset(
         hfds_identifier,
         hfds_config,
-        split=hfds_split,
-        streaming=hfds_stream_data,
+        split="train" if hfds_splits_set != set(SPLITS) else split_name,
+        streaming=False,
     )
 
     # shard by host, then tokenize the host's shard only
@@ -115,9 +101,9 @@ def get_dataset(
         batch_size=hfds_buffer_size,
     )
 
-    # automatically split the training split if there aren't any other provided splits
-    if len(hfds_splits_set) == 1:
-        if split_name == "val":
+    # automatically split the training split if there aren't canonical splits
+    if hfds_splits_set != set(SPLITS):
+        if split_name == "validation":
             ds = ds.take(batch_size * 100)
         elif split_name == "test":
             ds = ds.take(batch_size * 200).skip(batch_size * 100)
