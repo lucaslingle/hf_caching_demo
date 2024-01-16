@@ -146,7 +146,7 @@ def main():
         dataset_path=posixpath.join(args.gc_storage_uri, args.hfds_split_name),
         storage_options=storage_options,
     )
-    print(f"calling Dataset.__getitem__ to slice...")
+    print(f"calling Dataset.select to slice...")
     # https://discuss.huggingface.co/t/efficiently-slicing-dataset/28067
     ds = ds.select(itertools.count(start=STEP * BATCH_SIZE))
 
