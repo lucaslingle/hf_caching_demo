@@ -1,13 +1,13 @@
 # todo: maybe do the token shift inside model to reduce host-to-device io
 
 from typing import Optional, Iterator, Dict
+import math
 
 import datasets as hfds
 import transformers as hftr
 import numpy as np
 # import jax
-import math
-import logging
+from absl import logging
 
 hfds.disable_caching()
 SPLITS = ["train", "validation", "test"]

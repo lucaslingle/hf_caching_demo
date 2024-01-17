@@ -1,8 +1,8 @@
 # todo: maybe do the token shift inside model to reduce host-to-device io
 
 import argparse
-import logging
 
+from absl import logging
 import datasets as hfds
 
 from dataloader import get_tokenizer, get_dataset
