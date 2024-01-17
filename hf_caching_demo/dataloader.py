@@ -7,6 +7,7 @@ import transformers as hftr
 import numpy as np
 # import jax
 import math
+import logging
 
 hfds.disable_caching()
 SPLITS = ["train", "validation", "test"]
@@ -118,9 +119,9 @@ def get_dataset(
     )
 
     # convert to iterator, batch examples to the desired batch size per host.
-    print(f"calling Dataset.iter to make iterator of batches...")
+    logging.info(f"calling Dataset.iter to make iterator of batches...")
     ds = ds.iter(batch_size=batch_size, drop_last_batch=True)
-    print(f"calling map(ds_iter) to get numpy arrays...")
+    logging.info(f"calling map(ds_iter) to get numpy arrays...")
     ds = map(
         lambda r: {
             # "inputs": np.array(r["inputs"], dtype=np.int32),

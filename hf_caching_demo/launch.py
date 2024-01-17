@@ -1,6 +1,7 @@
 # todo: maybe do the token shift inside model to reduce host-to-device io
 
 import argparse
+import logging
 
 import datasets as hfds
 
@@ -19,10 +20,10 @@ def main():
     parser.add_argument("--hfds_split_name", type=str, help="HF datasets split name")
     args = parser.parse_args()
 
-    print(f"calling get_tokenizer to get fast tokenizer...")
+    logging.info(f"calling get_tokenizer to get fast tokenizer...")
     tokenizer = get_tokenizer("GPT2TokenizerFast", "gpt2")
 
-    print(f"calling get_dataset to get sharded bitwise reproducible dataset...")
+    logging.info(f"calling get_dataset to get sharded bitwise reproducible dataset...")
     ds = get_dataset(
         hfds_identifier=args.hfds_identifier,
         hfds_config=None,
