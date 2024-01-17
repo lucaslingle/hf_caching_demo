@@ -12,14 +12,11 @@ poetry install --with tpu --without cpu;  # or other way around
 
 ### Usage
 
-To make a Google Cloud API key, follow instructions [here](https://developers.google.com/workspace/guides/create-credentials).  
 To run the script, do something like this
 ```
 poetry run python3 hf_caching_demo/launch.py \
     --hfds_identifier=Skylion007/openwebtext \
-    --hfds_split_name=train \
-    --gc_project=someproject \
-    --gc_storage_uri=gs://somewhere/
+    --hfds_split_name=train
 ```
 
 

@@ -17,8 +17,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hfds_identifier", type=str, help="HF datasets identifier")
     parser.add_argument("--hfds_split_name", type=str, help="HF datasets split name")
-    parser.add_argument("--gc_project", type=str, help="Google Cloud project")
-    parser.add_argument("--gc_storage_uri", type=str, help="Google Cloud storage path")
     args = parser.parse_args()
 
     print(f"calling get_tokenizer to get fast tokenizer...")
