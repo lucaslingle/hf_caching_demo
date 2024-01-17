@@ -1,13 +1,11 @@
-# todo: shard by host, somehow
+# todo: shift inside model to reduce io
 
 from typing import Optional
 import argparse
 
-import gcsfs
+import jax
 import datasets as hfds
-import posixpath
 import transformers as hftr
-# import jax
 import numpy as np
 
 hfds.disable_caching()
@@ -50,17 +48,17 @@ def get_dataset(
     hfds_buffer_size: int,
     hftr_tokenizer: hftr.PreTrainedTokenizerFast,
     split_name: str,
+    batch_size: int,
     sequence_len: int,
+    step: int,
 ) -> hfds.Dataset:
-    # get shard info
-    # pcount = jax.process_count()
-    # pindex = jax.process_index()
+    hfds.disable_caching()
 
     # get tokenizer info
     assert hftr_tokenizer.is_fast
     bos_id = hftr_tokenizer.bos_token_id
 
-    # load dataset
+    # determine the dataset split to use
     hfds_splits_set = set(hfds.get_dataset_split_names(hfds_identifier))
     if hfds_splits_set != set(SPLITS):
         if split_name == "train":
@@ -74,23 +72,31 @@ def get_dataset(
     else:
         assert split_name in hfds_splits_set
 
+    # load the dataset
     ds = hfds.load_dataset(
-        hfds_identifier,
-        hfds_config,
+        path=hfds_identifier,
+        config=hfds_config,
         split=split_name,
-        streaming=False,
+        keep_in_memory=True,  # on tpu vm, disk < cpu ram. todo: whatif ram too small?
     )
-    # shard by host, then tokenize the host's shard only
-    assert "content_" not in set(ds.column_names)
 
-    def shard_by_host(examples):
-        # examples = examples[hfds_datacol]
-        # examples = [e for i, e in enumerate(examples) if i % pcount == pindex]
-        return {"content_": examples[hfds_datacol]}
+    # shard by host, drop remainder
+    pcount = jax.process_count()
+    pindex = jax.process_index()
+    full_len = len(ds)
+    shard_len = full_len // pcount
+    ds = ds.select(range(pindex * shard_len, (pindex + 1) * shard_len))
 
+    # skip to current batch for reproducibility
+    # note we are currently not manually shuffling each epoch.
+    # this should be fine if there is only one epoch.
+    offset = (step * batch_size) % shard_len
+    ds = ds.select(range(offset, shard_len))
+
+    # tokenize only the relevant stuff
     def tokenize(examples):
         targets = hftr_tokenizer(
-            examples["content_"],
+            examples[hfds_datacol],
             padding="max_length",
             truncation=True,
             max_length=sequence_len,
@@ -99,15 +105,10 @@ def get_dataset(
         return {"inputs": inputs, "targets": targets}
 
     ds = ds.map(
-        shard_by_host,
-        batched=True,
-        batch_size=hfds_buffer_size,  # * jax.process_count(),
-        remove_columns=list(ds.column_names),
-    )
-    ds = ds.map(
         tokenize,
         batched=True,
         batch_size=hfds_buffer_size,
+        remove_columns=list(ds.column_names),
     )
     return ds
 
@@ -119,33 +120,22 @@ def main():
     parser.add_argument("--gc_project", type=str, help="Google Cloud project")
     parser.add_argument("--gc_storage_uri", type=str, help="Google Cloud storage path")
     args = parser.parse_args()
-    storage_options = dict(project=args.gc_project)
-    fs = gcsfs.GCSFileSystem(**storage_options)
 
+    print(f"calling get_tokenizer to get fast tokenizer...")
     tokenizer = get_tokenizer("GPT2TokenizerFast", "gpt2")
-    for s in SPLITS:
-        path_s = posixpath.join(args.gc_storage_uri, s)
-        if not fs.exists(path_s):
-            print(f"calling get_dataset for split {s}...")
-            ds = get_dataset(
-                hfds_identifier=args.hfds_identifier,
-                hfds_config=None,
-                hfds_datacol=TEXTCOL,
-                hfds_buffer_size=1024,
-                hftr_tokenizer=get_tokenizer("GPT2TokenizerFast", "gpt2"),
-                split_name=s,
-                sequence_len=SEQLEN,
-            )
-            ds.save_to_disk(path_s, storage_options=storage_options)
 
-    print(f"calling hfds.load_from_disk for split {args.hfds_split_name}...")
-    ds = hfds.load_from_disk(
-        dataset_path=posixpath.join(args.gc_storage_uri, args.hfds_split_name),
-        storage_options=storage_options,
+    print(f"calling get_dataset to get sharded bitwise reproducible dataset...")
+    ds = get_dataset(
+        hfds_identifier=args.hfds_identifier,
+        hfds_config=None,
+        hfds_datacol=TEXTCOL,
+        hfds_buffer_size=1024,
+        hftr_tokenizer=tokenizer,
+        split_name=args.hfds_split_name,
+        batch_size=BATCH_SIZE,
+        sequence_len=SEQLEN,
+        step=STEP,
     )
-    print(f"calling Dataset.select to slice...")
-    # https://discuss.huggingface.co/t/efficiently-slicing-dataset/28067
-    ds = ds.select(range(STEP * BATCH_SIZE, len(ds)))
 
     # convert to iterator, batch examples to the desired batch size per host.
     print(f"calling Dataset.iter to make iterator of batches...")
