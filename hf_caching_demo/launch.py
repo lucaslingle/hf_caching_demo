@@ -1,4 +1,4 @@
-# todo: shift inside model to reduce io
+# todo: maybe do the token shift inside model to reduce host-to-device io
 
 from typing import Optional
 import argparse
@@ -14,6 +14,8 @@ BATCH_SIZE = 8
 SEQLEN = 512
 TEXTCOL = "text"
 SPLITS = ["train", "validation", "test"]
+PINDEX = 0
+PCOUNT = 1
 
 
 def get_tokenizer(
@@ -81,8 +83,8 @@ def get_dataset(
     )
 
     # shard by host, drop remainder
-    pcount = jax.process_count()
-    pindex = jax.process_index()
+    pcount = PCOUNT  # jax.process_count()
+    pindex = PINDEX  # jax.process_index()
     full_len = len(ds)
     shard_len = full_len // pcount
     ds = ds.select(range(pindex * shard_len, (pindex + 1) * shard_len))
