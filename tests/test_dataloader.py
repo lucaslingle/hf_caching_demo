@@ -22,7 +22,6 @@ def test_get_dataset():
     batch_size = 8
     seq_len = 512
     buffer_size = 1024
-    unittesting_shard_size = batch_size * 10
 
     ds_iter_original = get_dataset(
         hfds_identifier="roneneldan/TinyStories",  # todo: needs internet connection
@@ -34,7 +33,6 @@ def test_get_dataset():
         batch_size=batch_size,
         sequence_len=seq_len,
         step=0,
-        unittesting_shard_size=unittesting_shard_size,
     )
     batch0 = next(ds_iter_original)  # step 0
     batch1 = next(ds_iter_original)  # step 1
@@ -51,7 +49,6 @@ def test_get_dataset():
         batch_size=batch_size,
         sequence_len=seq_len,
         step=3,
-        unittesting_shard_size=unittesting_shard_size,
     )
     actual_batch3 = next(ds_iter_resumed)
     assert expected_batch3.keys() == actual_batch3.keys()

@@ -5,12 +5,13 @@ from typing import Optional, Iterator, Dict
 import datasets as hfds
 import transformers as hftr
 import numpy as np
-import jax
+# import jax
+import math
 
 hfds.disable_caching()
 SPLITS = ["train", "validation", "test"]
-# PINDEX = 0
-# PCOUNT = 1
+PINDEX = 0
+PCOUNT = 1
 
 
 def get_tokenizer(
@@ -48,7 +49,6 @@ def get_dataset(
     batch_size: int,
     sequence_len: int,
     step: int,
-    unittesting_shard_size: Optional[int] = None,  # small non-None for fast tests
 ) -> Iterator[Dict[str, np.ndarray]]:
     hfds.disable_caching()
 
@@ -56,44 +56,47 @@ def get_dataset(
     assert hftr_tokenizer.is_fast
     bos_id = hftr_tokenizer.bos_token_id
 
-    # determine the dataset split to use
-    hfds_splits_set = set(hfds.get_dataset_split_names(hfds_identifier))
-    if hfds_splits_set != set(SPLITS):
-        if split_name == "train":
-            split_name = "train[0%:90%]"
-        elif split_name == "validation":
-            split_name = "train[90%:95%]"
-        elif split_name == "test":
-            split_name = "train[95%:100%]"
-        else:
-            raise NotImplementedError
-    else:
-        assert split_name in hfds_splits_set
-
-    if unittesting_shard_size is not None:
-        assert unittesting_shard_size % batch_size == 0
-        split_name = f"train[0:{unittesting_shard_size}]"
+    # we'll always use a custom split of the training set for out train/validation/test
+    source_split = "train"
+    hfds_split_name = source_split
 
     # load the dataset
     ds = hfds.load_dataset(
         path=hfds_identifier,
         config=hfds_config,
-        split=split_name,
-        keep_in_memory=True,  # on tpu vm, disk < cpu ram. todo: whatif ram too small?
+        split=hfds_split_name,
+        # keep_in_memory=True,  # on tpu vm, disk < cpu ram. todo: whatif ram too small?
+        streaming=True,
     )
 
     # shard by host, drop remainder
-    pcount = jax.process_count()  # PCOUNT
-    pindex = jax.process_index()  # PINDEX
-    full_len = len(ds)
-    shard_len = full_len // pcount
-    ds = ds.select(range(pindex * shard_len, (pindex + 1) * shard_len))
+    # pcount = jax.process_count()
+    # pindex = jax.process_index()
+    pcount = PCOUNT
+    pindex = PINDEX
+    full_len = ds.info.splits.get(source_split).num_examples  # todo: edit
+    val_len = math.floor(0.05 * full_len)
+    if split_name == "validation":
+        ds = ds.take(val_len)
+    elif split_name == "test":
+        ds = ds.skip(val_len).take(val_len)
+    elif split_name == "train":
+        ds = ds.skip(2 * val_len)
+    else:
+        raise ValueError("Unrecognized split name")
 
-    # skip to current batch for reproducibility
+    split_len = full_len - 2 * val_len if split_name == "train" else val_len
+    assert split_len > 0
+    assert split_len > batch_size
+    shard_len = split_len // pcount  # shard across hosts
+    shard_len = (shard_len // batch_size) * batch_size  # drop any partial batch
+    ds = ds.skip(pindex * shard_len).take(shard_len)  # skip to shard, drop rest
+
+    # skip to current batch within shard, for reproducibility
     # note we are currently not manually shuffling each epoch.
     # this should be fine if there is only one epoch.
     offset = (step * batch_size) % shard_len
-    ds = ds.select(range(offset, shard_len))
+    ds = ds.skip(offset)
 
     # tokenize only the relevant stuff
     def tokenize(examples):
@@ -103,8 +106,9 @@ def get_dataset(
             truncation=True,
             max_length=sequence_len,
         )["input_ids"]
-        inputs = [[bos_id, *e[0:-1]] for e in targets]
-        return {"inputs": inputs, "targets": targets}
+        # inputs = [[bos_id, *e[0:-1]] for e in targets]
+        # return {"inputs": inputs, "targets": targets}
+        return {"targets": targets}
 
     ds = ds.map(
         tokenize,
@@ -119,16 +123,16 @@ def get_dataset(
     print(f"calling map(ds_iter) to get numpy arrays...")
     ds = map(
         lambda r: {
-            "inputs": np.array(r["inputs"], dtype=np.int32),
+            # "inputs": np.array(r["inputs"], dtype=np.int32),
             "targets": np.array(r["targets"], dtype=np.int32),
-            "loss_mask": np.cumprod(
-                np.pad(
-                    np.not_equal(r["inputs"], hftr_tokenizer.eos_token_id)[:, 1:],
-                    pad_width=((0, 0), (1, 0)),
-                    constant_values=True,
-                ).astype(np.int32),
-                axis=-1,
-            ),  # mask out every timestep once the input is eos, except at seq start
+            # "loss_mask": np.cumprod(
+            #     np.pad(
+            #         np.not_equal(r["inputs"], hftr_tokenizer.eos_token_id)[:, 1:],
+            #         pad_width=((0, 0), (1, 0)),
+            #         constant_values=True,
+            #     ).astype(np.int32),
+            #     axis=-1,
+            # ),  # mask out every timestep once the input is eos, except at seq start
         },
         ds,
     )
